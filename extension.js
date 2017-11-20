@@ -19,6 +19,10 @@ const PwmClient = new Lang.Class({
     Extends: PanelMenu.Button,
 
     _lightEnabled: false,
+    _sliderR: null,
+    _sliderG: null,
+    _sliderB: null,
+    _sliderBr: null,
 
     _init: function () {
         this.parent(0.0, "PwmClient", false);
@@ -62,6 +66,12 @@ const PwmClient = new Lang.Class({
                 debug_log('HTTP data: ' + JSON.stringify(json));
 
                 this._lightEnabled = (json.status == 'on');
+
+                this._sliderR._setValue(json.red / 255);
+                this._sliderG._setValue(json.green / 255);
+                this._sliderB._setValue(json.blue / 255);
+                
+                this._sliderBr._setValue(json.brightness / 100);
             }
           )
         );
@@ -107,6 +117,10 @@ const SliderWithIcon = new Lang.Class({
 
         this.actor.add(this._text);
         this.actor.add(this._slider.actor, {expand: true});
+    },
+
+    _setValue: function(value) {
+        this._slider._value = value;
     }
 });
 

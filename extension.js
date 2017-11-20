@@ -38,6 +38,11 @@ const PwmClient = new Lang.Class({
         this._sliderG = new SliderWithIcon('G', 0);
         this._sliderB = new SliderWithIcon('B', 0);
         this._sliderBr = new SliderWithIcon('Br', 1);
+
+        this._sliderR._connectOnChange(Lang.bind(this, this._setColorFromSliders));
+        this._sliderG._connectOnChange(Lang.bind(this, this._setColorFromSliders));
+        this._sliderB._connectOnChange(Lang.bind(this, this._setColorFromSliders));
+
         this.menu.addMenuItem(this._sliderR);
         this.menu.addMenuItem(this._sliderG);
         this.menu.addMenuItem(this._sliderB);
@@ -53,7 +58,7 @@ const PwmClient = new Lang.Class({
     _loadStatus: function() {
         debug_log('Loading Status');
         
-        var _httpSession = new Soup.Session()
+        var _httpSession = new Soup.Session();
         let message =   Soup.form_request_new_from_hash('POST', RPC_URL, {
             cmd: 'status',
         });
@@ -77,13 +82,36 @@ const PwmClient = new Lang.Class({
         );
     },
 
+    _setColorFromSliders: function() {
+        let byteR = Math.floor(this._sliderR._getValue() * 255);
+        let byteG = Math.floor(this._sliderG._getValue() * 255);
+        let byteB = Math.floor(this._sliderB._getValue() * 255);
+        debug_log('Setting color: ' + byteR + ', ' + byteG + ', ' + byteB);
+
+        var _httpSession = new Soup.Session();
+        let message = Soup.form_request_new_from_hash('POST', RPC_URL, {
+            cmd: 'setcolor',
+            red: String(byteR),
+            green: String(byteG),
+            blue: String(byteB),
+        });
+        _httpSession.queue_message(message, Lang.bind(this, function (_httpSession, message) {
+                if (message.status_code !== 200) {
+                    debug_log('HTTP Error: ' + message.status_code);
+                    return;
+                }
+            }
+          )
+        );
+    },
+
     _toggle: function() {
         let command = 'default';
         if (this._lightEnabled) {
             command = 'off';
         }
         debug_log('Toggle (cmd = ' + command + ')');
-        var _httpSession = new Soup.Session()
+        var _httpSession = new Soup.Session();
         let message =   Soup.form_request_new_from_hash('POST', RPC_URL, {
             cmd: command,
         });
@@ -119,8 +147,16 @@ const SliderWithIcon = new Lang.Class({
         this.actor.add(this._slider.actor, {expand: true});
     },
 
+    _getValue: function() {
+        return this._slider._value;
+    },
+
     _setValue: function(value) {
         this._slider._value = value;
+    },
+
+    _connectOnChange: function(callback) {
+        this._slider.connect('value-changed', callback);
     }
 });
 

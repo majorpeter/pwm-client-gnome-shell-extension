@@ -42,6 +42,7 @@ const PwmClient = new Lang.Class({
         this._sliderR._connectOnChange(Lang.bind(this, this._setColorFromSliders));
         this._sliderG._connectOnChange(Lang.bind(this, this._setColorFromSliders));
         this._sliderB._connectOnChange(Lang.bind(this, this._setColorFromSliders));
+        this._sliderBr._connectOnChange(Lang.bind(this, this._setBrightnessFromSlider));
 
         this.menu.addMenuItem(this._sliderR);
         this.menu.addMenuItem(this._sliderG);
@@ -98,7 +99,24 @@ const PwmClient = new Lang.Class({
         _httpSession.queue_message(message, Lang.bind(this, function (_httpSession, message) {
                 if (message.status_code !== 200) {
                     debug_log('HTTP Error: ' + message.status_code);
-                    return;
+                }
+            }
+          )
+        );
+    },
+
+    _setBrightnessFromSlider: function() {
+        let brightness = Math.floor(this._sliderBr._getValue() * 100);
+        debug_log('Setting brightness: ' + brightness);
+
+        var _httpSession = new Soup.Session();
+        let message = Soup.form_request_new_from_hash('POST', RPC_URL, {
+            cmd: 'setbrightness',
+            b: String(brightness),
+        });
+        _httpSession.queue_message(message, Lang.bind(this, function (_httpSession, message) {
+                if (message.status_code !== 200) {
+                    debug_log('HTTP Error: ' + message.status_code);
                 }
             }
           )

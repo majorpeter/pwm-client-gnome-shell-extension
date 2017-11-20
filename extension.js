@@ -6,6 +6,7 @@ const Lang = imports.lang;
 const Clutter = imports.gi.Clutter;
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
+const Slider = imports.ui.slider;
 
 function debug_log(text) {
     log('[PwmClient-DEBUG] ' + text);
@@ -28,6 +29,8 @@ const PwmClient = new Lang.Class({
         });
 
         this.actor.add_actor(this.buttonText);
+
+        this.menu.addMenuItem(new SliderWithIcon());
 
         let toggleMenuItem = new PopupMenu.PopupMenuItem(_('Toggle'));
         toggleMenuItem.connect('activate', Lang.bind(this, this._toggle));
@@ -76,6 +79,19 @@ const PwmClient = new Lang.Class({
             }
           )
         );
+    }
+});
+
+const SliderWithIcon = new Lang.Class({
+    Name: 'SliderWithIcon',
+    Extends: PopupMenu.PopupBaseMenuItem,
+
+    _init: function(params) {
+        this.parent(params);
+
+        //TODO icon
+        this._slider = new Slider.Slider(0);
+        this.actor.add(this._slider.actor, {expand: true});
     }
 });
 

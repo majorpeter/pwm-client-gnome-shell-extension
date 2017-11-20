@@ -30,7 +30,14 @@ const PwmClient = new Lang.Class({
 
         this.actor.add_actor(this.buttonText);
 
-        this.menu.addMenuItem(new SliderWithIcon());
+        this._sliderR = new SliderWithIcon('R', 0);
+        this._sliderG = new SliderWithIcon('G', 0);
+        this._sliderB = new SliderWithIcon('B', 0);
+        this._sliderBr = new SliderWithIcon('Br', 1);
+        this.menu.addMenuItem(this._sliderR);
+        this.menu.addMenuItem(this._sliderG);
+        this.menu.addMenuItem(this._sliderB);
+        this.menu.addMenuItem(this._sliderBr);
 
         let toggleMenuItem = new PopupMenu.PopupMenuItem(_('Toggle'));
         toggleMenuItem.connect('activate', Lang.bind(this, this._toggle));
@@ -86,11 +93,19 @@ const SliderWithIcon = new Lang.Class({
     Name: 'SliderWithIcon',
     Extends: PopupMenu.PopupBaseMenuItem,
 
-    _init: function(params) {
-        this.parent(params);
+    _init: function(title, initialValue) {
+        this.parent();
 
-        //TODO icon
+        //TODO icon instead
+        this._text = new St.Label({
+            text: title,
+            y_align: Clutter.ActorAlign.CENTER
+        });
+        // fun fact: this initial value argument takes a number between 0-100, but _value is between 0-1.0
         this._slider = new Slider.Slider(0);
+        this._slider._value = initialValue;
+
+        this.actor.add(this._text);
         this.actor.add(this._slider.actor, {expand: true});
     }
 });

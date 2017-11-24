@@ -52,8 +52,29 @@ const PwmClient = new Lang.Class({
         let toggleMenuItem = new PopupMenu.PopupMenuItem(_('Toggle'));
         toggleMenuItem.connect('activate', Lang.bind(this, this._toggle));
         this.menu.addMenuItem(toggleMenuItem);
+
+        // using _onEvent override instead: this.actor.connect('button-press-event', Lang.bind(this, this._onButtonEvent));
         
         this._loadStatus();
+    },
+
+    // Override PanelMenu.Button._onEvent
+    _onEvent: function(actor, event) {
+        if (this._onButtonEvent(actor, event) == Clutter.EVENT_PROPAGATE) {
+            this.parent(actor, event);
+        }
+    },
+
+    _onButtonEvent: function(actor, event) {
+        if (event.type() == Clutter.EventType.BUTTON_PRESS) {
+          let button = event.get_button();
+          //debug_log('Button event: ' + button);
+          if (button == 2) {
+            this._toggle();
+            return Clutter.EVENT_STOP;
+          }
+        }
+        return Clutter.EVENT_PROPAGATE;
     },
 
     _loadStatus: function() {

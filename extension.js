@@ -44,6 +44,10 @@ const PwmClient = new Lang.Class({
         this._sliderB._connectOnChange(Lang.bind(this, this._setColorFromSliders));
         this._sliderBr._connectOnChange(Lang.bind(this, this._setBrightnessFromSlider));
 
+        this._sliderR._connectIconClick(Lang.bind(this, this._sliderIconClicked, this._sliderR));
+        this._sliderG._connectIconClick(Lang.bind(this, this._sliderIconClicked, this._sliderG));
+        this._sliderB._connectIconClick(Lang.bind(this, this._sliderIconClicked, this._sliderB));
+
         this.menu.addMenuItem(this._sliderR);
         this.menu.addMenuItem(this._sliderG);
         this.menu.addMenuItem(this._sliderB);
@@ -169,6 +173,16 @@ const PwmClient = new Lang.Class({
         this._setBrightnessFromSlider();
     },
 
+    _sliderIconClicked: function(event, arg1, slider) {
+        let value = slider._getValue();
+        if (value != 0) {
+            slider._setValue(0);
+        } else {
+            slider._setValue(1);
+        }
+        this._setColorFromSliders();
+    },
+
     _toggle: function() {
         let command = 'default';
         if (this._lightEnabled) {
@@ -198,8 +212,8 @@ const SliderWithIcon = new Lang.Class({
     _init: function(title, style_css, initialValue) {
         this.parent();
 
-        this._text = new St.Label({
-            text: title,
+        this._icon = new St.Button({
+            label: title,
             style_class: 'slider-icon',
             style: style_css,
         });
@@ -207,7 +221,7 @@ const SliderWithIcon = new Lang.Class({
         this._slider = new Slider.Slider(0);
         this._slider._value = initialValue;
 
-        this.actor.add(this._text);
+        this.actor.add(this._icon);
         this.actor.add(this._slider.actor, {expand: true});
     },
 
@@ -221,6 +235,10 @@ const SliderWithIcon = new Lang.Class({
 
     _connectOnChange: function(callback) {
         this._slider.connect('value-changed', callback);
+    },
+
+    _connectIconClick: function(callback) {
+        this._icon.connect('clicked', callback);
     }
 });
 

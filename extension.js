@@ -58,9 +58,15 @@ const PwmClient = new Lang.Class({
         toggleMenuItem.connect('activate', Lang.bind(this, this._toggle));
         this.menu.addMenuItem(toggleMenuItem);
 
-        // using _onEvent override instead: this.actor.connect('button-press-event', Lang.bind(this, this._onButtonEvent));
+        this.menu.connect('open-state-changed', Lang.bind(this, function(menu, open) {
+            if (open) {
+                this._loadStatus();
+            }
+        }));
+
         this.actor.connect('scroll-event', Lang.bind(this, this._onScrollEvent));
 
+        // load current status at the end of initialization
         this._loadStatus();
     },
 
@@ -196,6 +202,11 @@ const PwmClient = new Lang.Class({
 
             // send command
             this._toggleOff();
+
+            // clear slider values (suppose the command was successful)
+            this._sliderR._setValue(0);
+            this._sliderG._setValue(0);
+            this._sliderB._setValue(0);
         } else {
             // restore values
             this._sliderR._setValue(this._lastOnState.r);

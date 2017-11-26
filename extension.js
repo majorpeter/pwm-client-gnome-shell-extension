@@ -34,10 +34,10 @@ const PwmClient = new Lang.Class({
 
         this.actor.add_actor(this.buttonText);
 
-        this._sliderR = new SliderWithIcon('R', 0);
-        this._sliderG = new SliderWithIcon('G', 0);
-        this._sliderB = new SliderWithIcon('B', 0);
-        this._sliderBr = new SliderWithIcon('Br', 1);
+        this._sliderR = new SliderWithIcon('', 'background:red', 0);
+        this._sliderG = new SliderWithIcon('', 'background:green', 0);
+        this._sliderB = new SliderWithIcon('', 'background:blue', 0);
+        this._sliderBr = new SliderWithIcon('B', 'background:#f0f0f0;color:#333;', 1);
 
         this._sliderR._connectOnChange(Lang.bind(this, this._setColorFromSliders));
         this._sliderG._connectOnChange(Lang.bind(this, this._setColorFromSliders));
@@ -195,13 +195,13 @@ const SliderWithIcon = new Lang.Class({
     Name: 'SliderWithIcon',
     Extends: PopupMenu.PopupBaseMenuItem,
 
-    _init: function(title, initialValue) {
+    _init: function(title, style_css, initialValue) {
         this.parent();
 
-        //TODO icon instead
         this._text = new St.Label({
             text: title,
-            y_align: Clutter.ActorAlign.CENTER
+            style_class: 'slider-icon',
+            style: style_css,
         });
         // fun fact: this initial value argument takes a number between 0-100, but _value is between 0-1.0
         this._slider = new Slider.Slider(0);

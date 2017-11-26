@@ -54,7 +54,8 @@ const PwmClient = new Lang.Class({
         this.menu.addMenuItem(toggleMenuItem);
 
         // using _onEvent override instead: this.actor.connect('button-press-event', Lang.bind(this, this._onButtonEvent));
-        
+        this.actor.connect('scroll-event', Lang.bind(this, this._onScrollEvent));
+
         this._loadStatus();
     },
 
@@ -77,9 +78,21 @@ const PwmClient = new Lang.Class({
         return Clutter.EVENT_PROPAGATE;
     },
 
+    _onScrollEvent: function(actor, event) {
+        const SCROLL_BRIGHTNESS_INCREMENT = 0.03;
+        switch (event.get_scroll_direction()) {
+        case Clutter.ScrollDirection.UP:
+            this._setBrightnessAddDifference(SCROLL_BRIGHTNESS_INCREMENT);
+            break;
+        case Clutter.ScrollDirection.DOWN:
+            this._setBrightnessAddDifference(-SCROLL_BRIGHTNESS_INCREMENT);
+            break;
+        }
+    },
+
     _loadStatus: function() {
         debug_log('Loading Status');
-        
+
         var _httpSession = new Soup.Session();
         let message =   Soup.form_request_new_from_hash('POST', RPC_URL, {
             cmd: 'status',
@@ -97,7 +110,7 @@ const PwmClient = new Lang.Class({
                 this._sliderR._setValue(json.red / 255);
                 this._sliderG._setValue(json.green / 255);
                 this._sliderB._setValue(json.blue / 255);
-                
+
                 this._sliderBr._setValue(json.brightness / 100);
             }
           )
@@ -142,6 +155,18 @@ const PwmClient = new Lang.Class({
             }
           )
         );
+    },
+
+    _setBrightnessAddDifference: function(difference) {
+        let b = this._sliderBr._getValue();
+        b += difference;
+        if (b < 0) {
+            b = 0;
+        } else if (b > 1) {
+            b = 1;
+        }
+        this._sliderBr._setValue(b);
+        this._setBrightnessFromSlider();
     },
 
     _toggle: function() {
@@ -191,7 +216,7 @@ const SliderWithIcon = new Lang.Class({
     },
 
     _setValue: function(value) {
-        this._slider._value = value;
+        this._slider.setValue(value);
     },
 
     _connectOnChange: function(callback) {

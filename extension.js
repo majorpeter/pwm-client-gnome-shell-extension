@@ -23,6 +23,7 @@ const PwmClient = new Lang.Class({
     _sliderG: null,
     _sliderB: null,
     _sliderBr: null,
+    _lastOnState: {'r': 0, 'g': 0, 'b': 0},
 
     _init: function () {
         this.parent(0.0, "PwmClient", false);
@@ -137,7 +138,10 @@ const PwmClient = new Lang.Class({
         _httpSession.queue_message(message, Lang.bind(this, function (_httpSession, message) {
                 if (message.status_code !== 200) {
                     debug_log('HTTP Error: ' + message.status_code);
+                    return;
                 }
+
+                this._lightEnabled = (byteR > 0) || (byteG > 0) || (byteB > 0);
             }
           )
         );
@@ -184,21 +188,36 @@ const PwmClient = new Lang.Class({
     },
 
     _toggle: function() {
-        let command = 'default';
         if (this._lightEnabled) {
-            command = 'off';
+            // save current values first
+            this._lastOnState.r = this._sliderR._getValue();
+            this._lastOnState.g = this._sliderG._getValue();
+            this._lastOnState.b = this._sliderB._getValue();
+
+            // send command
+            this._toggleOff();
+        } else {
+            // restore values
+            this._sliderR._setValue(this._lastOnState.r);
+            this._sliderG._setValue(this._lastOnState.g);
+            this._sliderB._setValue(this._lastOnState.b);
+
+            this._setColorFromSliders();
         }
-        debug_log('Toggle (cmd = ' + command + ')');
+    },
+
+    _toggleOff: function() {
+        debug_log('Toggle (cmd = off)');
         var _httpSession = new Soup.Session();
         let message =   Soup.form_request_new_from_hash('POST', RPC_URL, {
-            cmd: command,
+            cmd: 'off',
         });
         _httpSession.queue_message(message, Lang.bind(this, function (_httpSession, message) {
                 if (message.status_code !== 200) {
                     debug_log('HTTP Error: ' + message.status_code);
                     return;
                 }
-                this._lightEnabled = !this._lightEnabled;
+                this._lightEnabled = false;
             }
           )
         );

@@ -23,6 +23,7 @@ const PwmClient = new Lang.Class({
     _sliderG: null,
     _sliderB: null,
     _sliderBr: null,
+    _toggleAnimationTime: 0.5,
     _lastOnState: {'r': 0, 'g': 0, 'b': 0},
 
     _init: function () {
@@ -127,16 +128,20 @@ const PwmClient = new Lang.Class({
         );
     },
 
-    _setColorFromSliders: function() {
+    _setColorFromSliders: function(animationTime) {
         let byteR = Math.floor(this._sliderR._getValue() * 255);
         let byteG = Math.floor(this._sliderG._getValue() * 255);
         let byteB = Math.floor(this._sliderB._getValue() * 255);
         debug_log('Setting color: ' + byteR + ', ' + byteG + ', ' + byteB);
 
         var _httpSession = new Soup.Session();
-        let message = Soup.form_request_new_from_hash('POST', SERVER_URL + '/led', {
-            rgb: byteR + ',' + byteG + ',' + byteB,
-        });
+        let argument = {
+            rgb: byteR + ',' + byteG + ',' + byteB
+        };
+        if (animationTime) {
+            argument['animate'] = String(animationTime)
+        }
+        let message = Soup.form_request_new_from_hash('POST', SERVER_URL + '/led', argument);
         _httpSession.queue_message(message, Lang.bind(this, function (_httpSession, message) {
                 if (message.status_code !== 200) {
                     debug_log('HTTP Error: ' + message.status_code);
@@ -209,15 +214,16 @@ const PwmClient = new Lang.Class({
             this._sliderG._setValue(this._lastOnState.g);
             this._sliderB._setValue(this._lastOnState.b);
 
-            this._setColorFromSliders();
+            this._setColorFromSliders(this._toggleAnimationTime);
         }
     },
 
     _toggleOff: function() {
         debug_log('Toggle (cmd = off)');
         var _httpSession = new Soup.Session();
-        let message =   Soup.form_request_new_from_hash('POST', RPC_URL, {
-            cmd: 'off',
+        let message =   Soup.form_request_new_from_hash('POST', SERVER_URL + '/led', {
+            rgb: '0,0,0',
+            animate: String(this._toggleAnimationTime)
         });
         _httpSession.queue_message(message, Lang.bind(this, function (_httpSession, message) {
                 if (message.status_code !== 200) {

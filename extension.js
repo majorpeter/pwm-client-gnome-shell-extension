@@ -128,7 +128,7 @@ const PwmClient = new Lang.Class({
         );
     },
 
-    _setColorFromSliders: function(animationTime) {
+    _setColorFromSliders: function(sender, animationTime) {
         let byteR = Math.floor(this._sliderR._getValue() * 255);
         let byteG = Math.floor(this._sliderG._getValue() * 255);
         let byteB = Math.floor(this._sliderB._getValue() * 255);
@@ -214,7 +214,7 @@ const PwmClient = new Lang.Class({
             this._sliderG._setValue(this._lastOnState.g);
             this._sliderB._setValue(this._lastOnState.b);
 
-            this._setColorFromSliders(this._toggleAnimationTime);
+            this._setColorFromSliders(null, this._toggleAnimationTime);
         }
     },
 

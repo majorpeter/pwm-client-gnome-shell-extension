@@ -12,7 +12,7 @@ function debug_log(text) {
     log('[PwmClient-DEBUG] ' + text);
 }
 
-const RPC_URL = 'http://192.168.0.200:8081/rpc';
+const SERVER_URL = 'http://192.168.0.200:5000';
 
 const PwmClient = new Lang.Class({
     Name: 'PwmClient',
@@ -105,9 +105,7 @@ const PwmClient = new Lang.Class({
         debug_log('Loading Status');
 
         var _httpSession = new Soup.Session();
-        let message =   Soup.form_request_new_from_hash('POST', RPC_URL, {
-            cmd: 'status',
-        });
+        let message =   Soup.form_request_new_from_hash('GET', SERVER_URL + '/led', {});
         _httpSession.queue_message(message, Lang.bind(this, function (_httpSession, message) {
                 if (message.status_code !== 200) {
                     debug_log('HTTP Error: ' + message.status_code);
@@ -116,13 +114,14 @@ const PwmClient = new Lang.Class({
                 let json = JSON.parse(message.response_body.data);
                 debug_log('HTTP data: ' + JSON.stringify(json));
 
-                this._lightEnabled = (json.status == 'on');
+                let rgb_colors = json.rgb.split(',');
+                this._lightEnabled = (rgb_colors[0] > 0) ||
+                                     (rgb_colors[1] > 0) ||
+                                     (rgb_colors[2] > 0);
 
-                this._sliderR._setValue(json.red / 255);
-                this._sliderG._setValue(json.green / 255);
-                this._sliderB._setValue(json.blue / 255);
-
-                this._sliderBr._setValue(json.brightness / 100);
+                this._sliderR._setValue(rgb_colors[0] / 255);
+                this._sliderG._setValue(rgb_colors[1] / 255);
+                this._sliderB._setValue(rgb_colors[2] / 255);
             }
           )
         );
@@ -135,11 +134,8 @@ const PwmClient = new Lang.Class({
         debug_log('Setting color: ' + byteR + ', ' + byteG + ', ' + byteB);
 
         var _httpSession = new Soup.Session();
-        let message = Soup.form_request_new_from_hash('POST', RPC_URL, {
-            cmd: 'setcolor',
-            red: String(byteR),
-            green: String(byteG),
-            blue: String(byteB),
+        let message = Soup.form_request_new_from_hash('POST', SERVER_URL + '/led', {
+            rgb: byteR + ',' + byteG + ',' + byteB,
         });
         _httpSession.queue_message(message, Lang.bind(this, function (_httpSession, message) {
                 if (message.status_code !== 200) {

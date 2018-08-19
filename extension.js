@@ -143,14 +143,18 @@ const PwmClient = new Lang.Class({
         );
     },
 
-    _onSliderVaueChanged: function(sender, value) {
+    _sendSliderValues: function(animationTime) {
         this._rgb_colors = [
             Math.floor(this._sliderR._getValue() * 255),
             Math.floor(this._sliderG._getValue() * 255),
             Math.floor(this._sliderB._getValue() * 255)
         ];
 
-        this._sendRgbColors(this._rgb_colors);
+        this._sendRgbColors(this._rgb_colors, animationTime);
+    },
+
+    _onSliderVaueChanged: function(sender, value) {
+        this._sendSliderValues();
     },
 
     _sliderIconClicked: function(event, arg1, slider) {
@@ -160,7 +164,7 @@ const PwmClient = new Lang.Class({
         } else {
             slider._setValue(1);
         }
-        this._onSliderVaueChanged(slider, null); //TODO animate
+        this._sendSliderValues(this._toggleAnimationTime);
     },
 
     _toggle: function() {

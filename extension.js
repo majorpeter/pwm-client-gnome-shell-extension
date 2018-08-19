@@ -25,6 +25,7 @@ const PwmClient = new Lang.Class({
     _toggleAnimationTime: 0.5,
     _lastOnState: {'r': 0, 'g': 0, 'b': 0},
     _rgb_colors: null,
+    _relative_brightness: 0,
 
     _init: function () {
         this.parent(0.0, "PwmClient", false);
@@ -88,7 +89,14 @@ const PwmClient = new Lang.Class({
     },
 
     _onScrollEvent: function(actor, event) {
-        debug_log('Not implemented!')
+        switch (event.get_scroll_direction()) {
+        case Clutter.ScrollDirection.UP:
+            this._changeBrightness(1);
+            break;
+        case Clutter.ScrollDirection.DOWN:
+            this._changeBrightness(-1);
+            break;
+        }
     },
 
     _loadStatus: function() {
@@ -149,6 +157,7 @@ const PwmClient = new Lang.Class({
             Math.floor(this._sliderG._getValue() * 255),
             Math.floor(this._sliderB._getValue() * 255)
         ];
+        this._relative_brightness = 0;
 
         this._sendRgbColors(this._rgb_colors, animationTime);
     },
@@ -194,6 +203,30 @@ const PwmClient = new Lang.Class({
             this._sliderG._setValue(this._lastOnState.g);
             this._sliderB._setValue(this._lastOnState.b);
         }
+    },
+
+    _changeBrightness: function(delta) {
+        var BRIGHTNESS_QUOTIENT = 1.25;
+        var CHANNEL_MAX = 255;
+
+        this._relative_brightness += delta;
+
+        var corrected_rgb_values = this._rgb_colors.slice();
+        for (i in corrected_rgb_values) {
+            if (corrected_rgb_values[i] == 0) {
+                corrected_rgb_values[i] = 0.5;
+            }
+            corrected_rgb_values[i] = Math.round(Math.pow(BRIGHTNESS_QUOTIENT, this._relative_brightness) * corrected_rgb_values[i]);
+            if (corrected_rgb_values[i] > CHANNEL_MAX) {
+                corrected_rgb_values[i] = CHANNEL_MAX;
+            }
+        }
+
+        this._sliderR._setValue(corrected_rgb_values[0] / 255);
+        this._sliderG._setValue(corrected_rgb_values[1] / 255);
+        this._sliderB._setValue(corrected_rgb_values[2] / 255);
+
+        this._sendRgbColors(corrected_rgb_values);
     }
 });
 

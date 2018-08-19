@@ -24,6 +24,7 @@ const PwmClient = new Lang.Class({
     _sliderB: null,
     _toggleAnimationTime: 0.5,
     _lastOnState: {'r': 0, 'g': 0, 'b': 0},
+    _rgb_colors: null,
 
     _init: function () {
         this.parent(0.0, "PwmClient", false);
@@ -39,9 +40,9 @@ const PwmClient = new Lang.Class({
         this._sliderG = new SliderWithIcon('', 'background:green', 0);
         this._sliderB = new SliderWithIcon('', 'background:blue', 0);
 
-        this._sliderR._connectOnChange(Lang.bind(this, this._setColorFromSliders));
-        this._sliderG._connectOnChange(Lang.bind(this, this._setColorFromSliders));
-        this._sliderB._connectOnChange(Lang.bind(this, this._setColorFromSliders));
+        this._sliderR._connectOnChange(Lang.bind(this, this._onSliderVaueChanged));
+        this._sliderG._connectOnChange(Lang.bind(this, this._onSliderVaueChanged));
+        this._sliderB._connectOnChange(Lang.bind(this, this._onSliderVaueChanged));
 
         this._sliderR._connectIconClick(Lang.bind(this, this._sliderIconClicked, this._sliderR));
         this._sliderG._connectIconClick(Lang.bind(this, this._sliderIconClicked, this._sliderG));
@@ -103,28 +104,26 @@ const PwmClient = new Lang.Class({
                 let json = JSON.parse(message.response_body.data);
                 debug_log('HTTP data: ' + JSON.stringify(json));
 
-                let rgb_colors = json.rgb.split(',');
-                this._lightEnabled = (rgb_colors[0] > 0) ||
-                                     (rgb_colors[1] > 0) ||
-                                     (rgb_colors[2] > 0);
+                this._rgb_colors = json.rgb.split(',');
+                this._lightEnabled = (this._rgb_colors[0] > 0) ||
+                                     (this._rgb_colors[1] > 0) ||
+                                     (this._rgb_colors[2] > 0);
 
-                this._sliderR._setValue(rgb_colors[0] / 255);
-                this._sliderG._setValue(rgb_colors[1] / 255);
-                this._sliderB._setValue(rgb_colors[2] / 255);
+                this._sliderR._setValue(this._rgb_colors[0] / 255);
+                this._sliderG._setValue(this._rgb_colors[1] / 255);
+                this._sliderB._setValue(this._rgb_colors[2] / 255);
             }
           )
         );
     },
 
-    _setColorFromSliders: function(sender, value, animationTime) {
-        let byteR = Math.floor(this._sliderR._getValue() * 255);
-        let byteG = Math.floor(this._sliderG._getValue() * 255);
-        let byteB = Math.floor(this._sliderB._getValue() * 255);
-        debug_log('Setting color: ' + byteR + ', ' + byteG + ', ' + byteB);
+    _sendRgbColors: function(colors, animationTime) {
+        let rgb_string = colors[0] + ',' + colors[1] + ',' + colors[2];
+        debug_log('Setting color: ' + rgb_string);
 
         var _httpSession = new Soup.Session();
         let argument = {
-            rgb: byteR + ',' + byteG + ',' + byteB
+            rgb: rgb_string
         };
         if (animationTime) {
             argument['animate'] = String(animationTime)
@@ -136,10 +135,22 @@ const PwmClient = new Lang.Class({
                     return;
                 }
 
-                this._lightEnabled = (byteR > 0) || (byteG > 0) || (byteB > 0);
+                this._lightEnabled = (colors[0] > 0) ||
+                                     (colors[1] > 0) ||
+                                     (colors[2] > 0);
             }
           )
         );
+    },
+
+    _onSliderVaueChanged: function(sender, value) {
+        this._rgb_colors = [
+            Math.floor(this._sliderR._getValue() * 255),
+            Math.floor(this._sliderG._getValue() * 255),
+            Math.floor(this._sliderB._getValue() * 255)
+        ];
+
+        this._sendRgbColors(this._rgb_colors);
     },
 
     _sliderIconClicked: function(event, arg1, slider) {
@@ -149,7 +160,7 @@ const PwmClient = new Lang.Class({
         } else {
             slider._setValue(1);
         }
-        this._setColorFromSliders(slider, null, 0.5);
+        this._onSliderVaueChanged(slider, null); //TODO animate
     },
 
     _toggle: function() {
@@ -172,7 +183,7 @@ const PwmClient = new Lang.Class({
             this._sliderG._setValue(this._lastOnState.g);
             this._sliderB._setValue(this._lastOnState.b);
 
-            this._setColorFromSliders(null, 0, this._toggleAnimationTime);
+            this._onSliderVaueChanged(null, 0, this._toggleAnimationTime); //TODO animate
         }
     },
 

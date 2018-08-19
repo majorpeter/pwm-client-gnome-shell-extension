@@ -171,38 +171,25 @@ const PwmClient = new Lang.Class({
             this._lastOnState.b = this._sliderB._getValue();
 
             // send command
-            this._toggleOff();
+            this._sendRgbColors([0, 0, 0], this._toggleAnimationTime);
 
             // clear slider values (suppose the command was successful)
             this._sliderR._setValue(0);
             this._sliderG._setValue(0);
             this._sliderB._setValue(0);
         } else {
-            // restore values
+            // send command
+            this._sendRgbColors([
+                Math.floor(this._lastOnState.r * 255),
+                Math.floor(this._lastOnState.g * 255),
+                Math.floor(this._lastOnState.b * 255),
+            ], this._toggleAnimationTime);
+
+            // restore slider values
             this._sliderR._setValue(this._lastOnState.r);
             this._sliderG._setValue(this._lastOnState.g);
             this._sliderB._setValue(this._lastOnState.b);
-
-            this._onSliderVaueChanged(null, 0, this._toggleAnimationTime); //TODO animate
         }
-    },
-
-    _toggleOff: function() {
-        debug_log('Toggle (cmd = off)');
-        var _httpSession = new Soup.Session();
-        let message =   Soup.form_request_new_from_hash('POST', SERVER_URL + '/led', {
-            rgb: '0,0,0',
-            animate: String(this._toggleAnimationTime)
-        });
-        _httpSession.queue_message(message, Lang.bind(this, function (_httpSession, message) {
-                if (message.status_code !== 200) {
-                    debug_log('HTTP Error: ' + message.status_code);
-                    return;
-                }
-                this._lightEnabled = false;
-            }
-          )
-        );
     }
 });
 

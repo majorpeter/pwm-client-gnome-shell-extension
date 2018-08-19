@@ -149,7 +149,7 @@ const PwmClient = new Lang.Class({
         } else {
             slider._setValue(1);
         }
-        this._setColorFromSliders();
+        this._setColorFromSliders(slider, null, 0.5);
     },
 
     _toggle: function() {

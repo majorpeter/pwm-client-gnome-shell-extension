@@ -7,6 +7,7 @@ const Clutter = imports.gi.Clutter;
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
 const Slider = imports.ui.slider;
+const Util = imports.misc.util;
 
 function debug_log(text) {
     log('[PwmClient-DEBUG] ' + text);
@@ -56,6 +57,10 @@ const PwmClient = new Lang.Class({
         let toggleMenuItem = new PopupMenu.PopupMenuItem(_('Toggle'));
         toggleMenuItem.connect('activate', Lang.bind(this, this._toggle));
         this.menu.addMenuItem(toggleMenuItem);
+
+        let openWebsiteMenuItem = new PopupMenu.PopupMenuItem(_('Open website'));
+        openWebsiteMenuItem.connect('activate', Lang.bind(this, this._openWebsite));
+        this.menu.addMenuItem(openWebsiteMenuItem);
 
         this.menu.connect('open-state-changed', Lang.bind(this, function(menu, open) {
             if (open) {
@@ -227,6 +232,10 @@ const PwmClient = new Lang.Class({
         this._sliderB._setValue(corrected_rgb_values[2] / 255);
 
         this._sendRgbColors(corrected_rgb_values);
+    },
+
+    _openWebsite: function() {
+        Util.spawn(['xdg-open', SERVER_URL]);
     }
 });
 
